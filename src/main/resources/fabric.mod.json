@@ -3,14 +3,14 @@
 	"id": "autorebootmod",
 	"version": "${version}",
 	"name": "Auto Reboot",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "AutoRebootMod is a professional-grade server utility for Minecraft (Fabric) designed to handle automated restarts with precision. Whether you run a small private server or a high-traffic public network, this mod ensures your server stays fresh and stable without manual intervention.",
 	"authors": [
 		"tuncayoriginal",
 		"yoobr"
 	],
 	"contact": {
 		"homepage": "https://originals-corporation.org/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/originals-corporation-org/AutoReboot"
 	},
 	"license": "MIT",
 	"icon": "assets/autorebootmod/icon.png",
