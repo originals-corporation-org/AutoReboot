@@ -54,7 +54,6 @@ public class AutoRebootMod implements ModInitializer {
 		LOGGER.info("[AutoReboot] Initializing professional reboot system...");
 		loadAllConfigs();
 
-		// Join Guard - Block new connections during the reboot countdown
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			if (rebootPending) {
 				handler.disconnect(Text.literal(getMsg("kick_reason")));
@@ -63,12 +62,18 @@ public class AutoRebootMod implements ModInitializer {
 
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			dispatcher.register(CommandManager.literal("reboot")
+					// 1. Делаем корень доступным для всех (level 0)
+					.requires(source -> source.hasPermissionLevel(0))
+
+					// 2. Подкоманда INFO (наследует level 0)
 					.then(CommandManager.literal("info")
 							.executes(context -> {
 								context.getSource().sendFeedback(() -> Text.literal(getDetailedInfo()), false);
 								return 1;
 							})
 					)
+
+					// 3. Подкоманда RELOAD (явно ставим level 4)
 					.then(CommandManager.literal("reload")
 							.requires(source -> source.hasPermissionLevel(4))
 							.executes(context -> {
@@ -77,8 +82,14 @@ public class AutoRebootMod implements ModInitializer {
 								return 1;
 							})
 					)
-					.requires(source -> source.hasPermissionLevel(4))
+
+					// 4. Основное действие команды /reboot (запуск рестарта)
+					// Проверяем права ВНУТРИ executes, чтобы команда была видна, но не работала у игроков
 					.executes(context -> {
+						if (!context.getSource().hasPermissionLevel(4)) {
+							context.getSource().sendError(Text.literal(getMsg("no_permission")));
+							return 0;
+						}
 						startRebootProcess(context.getSource().getServer());
 						return 1;
 					})
@@ -255,33 +266,18 @@ public class AutoRebootMod implements ModInitializer {
 	private void saveDefaultMainConfig(File f) throws Exception {
 		String content = """
             {
-              // Language for messages (ru_ru or en_us)
               "language": "en_us",
-
-              // Reboot logic: "Manual", "Interval" (every X min), or "Scheduled" (at specific times)
               "reboot_mode": "Manual",
-
-              // Final countdown in seconds before the server stops
               "reboot_seconds": 15,
-
-              // Frequency of reboots in minutes (for "Interval" mode)
               "interval_minutes": 360,
-
-              // Specific times for reboots in 24h format (for "Scheduled" mode)
               "schedule_times": [
                 "00:00",
                 "06:00",
                 "12:00",
                 "18:00"
               ],
-              
-              // Warning alerts sent to chat (minutes before reboot)
               "reboot_warning_minutes": [10, 5, 2, 1],
-
-              // Name of the script file in the server root to execute after stopping
               "startup_script": "start.bat",
-
-              // Delay after kicking players to ensure the world is saved (in seconds)
               "script_delay": 3
             }
             """;
